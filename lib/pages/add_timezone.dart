@@ -13,11 +13,12 @@ class AddTimezone extends StatefulWidget {
 }
 
 class _AddTimezoneState extends State<AddTimezone> {
-  List<String>? timezones;
+  List<String>? timezones, timezonesShowed;
   bool isLoading = true;
 
   void initTimezones() async{
     timezones = await getTimezones();
+    timezonesShowed = timezones;
 
     setState(() {
       isLoading = false;
@@ -26,7 +27,7 @@ class _AddTimezoneState extends State<AddTimezone> {
 
   void addInstance(int index){
     Navigator.pop(context, {
-      'url': timezones![index]
+      'url': timezonesShowed![index]
     });
   }
 
@@ -36,9 +37,17 @@ class _AddTimezoneState extends State<AddTimezone> {
     initTimezones();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  void searchTimezone(String query){
+    final suggestion = timezones!.where((timezone) {
+      final timezoneLower = timezone.toLowerCase();
+      final input = query.toLowerCase();
+      
+      return timezoneLower.contains(input);
+    }).toList();
+
+    setState(() {
+      timezonesShowed = suggestion;
+    });
   }
 
   @override
@@ -56,16 +65,31 @@ class _AddTimezoneState extends State<AddTimezone> {
       body: Center(
         child: (isLoading) ?
         const CircularProgressIndicator() :
-        ListView.builder(
-          itemCount: timezones!.length,
-          itemBuilder: (context, index){
-            return ListTile(
-              title: Text(
-                timezones![index]
+        Column(
+          children: [
+            TextField(
+              onChanged: searchTimezone,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20)
+                ),
+                prefixIcon: const Icon(Icons.search)
               ),
-              onTap:() {addInstance(index);},
-            );
-          }
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: timezonesShowed!.length,
+                itemBuilder: (context, index){
+                  return ListTile(
+                    title: Text(
+                      timezonesShowed![index]
+                    ),
+                    onTap:() {addInstance(index);},
+                  );
+                }
+              ),
+            ),
+          ],
         ),
       ),
     );
