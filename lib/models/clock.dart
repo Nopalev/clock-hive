@@ -18,4 +18,9 @@ class Clock {
   String date(){
     return DateFormat('dd/MM/yyyy').format(now);
   }
+
+  String offset(){
+    String offsetSign = (now.timeZoneOffset.inHours < 0) ? '-' : '+';
+    return 'UTC $offsetSign${now.timeZoneOffset.inHours.toString().padLeft(2, '0')}:${(now.timeZoneOffset.inMinutes%60).toString().padLeft(2, '0')}';
+  }
 }

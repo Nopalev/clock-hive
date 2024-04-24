@@ -1,13 +1,8 @@
 import 'dart:convert';
-import 'package:hive/hive.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
-part 'worldtime.g.dart';
-
-@HiveType(typeId: 0)
 class WorldTime {
-  @HiveField(0)
   final String? url;
 
   DateTime? time;

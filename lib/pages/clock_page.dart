@@ -14,32 +14,25 @@ class ClockPage extends StatefulWidget {
 
 class _ClockPageState extends State<ClockPage> {
   Box? box;
+  String boxName = 'worldtime';
+  String keyName = 'timezones';
   Timer? t;
   Clock clock = Clock(now: DateTime.now());
   bool isLoading = true;
 
-  List<WorldTime>? worldtimes;
+  List<String> timezones = [];
+  Map<String, WorldTime> worldtimes = {};
 
   void initClock() async {
-    box = await Hive.openBox('worldtime');
-
-    dynamic data = box!.get('timezones');
-    if(data != null) {
-      worldtimes = List<WorldTime>.from(data);
-    }
-    else{
-      worldtimes = [
-        WorldTime(url: 'Asia/Jakarta'),
-        WorldTime(url: 'Asia/Tokyo'),
-        WorldTime(url: 'Asia/Kathmandu'),
-        WorldTime(url: 'America/Los_Angeles')
-      ];
-    }
+    box = await Hive.openBox(boxName);
+    timezones = List<String>.from(await box!.get(keyName, defaultValue: []));
     await box!.close();
 
-    if(worldtimes != null) {
-      for (var worldtime in worldtimes!) {
-        await worldtime.getTime();
+    if(timezones.isNotEmpty) {
+      for (var timezone in timezones) {
+        WorldTime instance = WorldTime(url: timezone);
+        await instance.getTime();
+        worldtimes[timezone] = instance;
       }
     }
 
@@ -56,8 +49,8 @@ class _ClockPageState extends State<ClockPage> {
     t = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
         clock.renew();
-        if(worldtimes != null) {
-          for (var worldtime in worldtimes!) {
+        if(worldtimes.isNotEmpty) {
+          for (var worldtime in worldtimes.values) {
             worldtime.renew();
           }
         }
@@ -91,22 +84,22 @@ class _ClockPageState extends State<ClockPage> {
               ),
             ),
             Text(
-              clock.date(),
+              '${clock.date()}, ${clock.offset()}',
               style: const TextStyle(
                   fontSize: 16
               ),
             ),
             const SizedBox(height: 20),
-            (worldtimes == null) ? const SizedBox(height: 20) :
+            (worldtimes.isEmpty) ? const SizedBox(height: 20) :
             Expanded(
               child: ListView.builder(
-                itemCount: worldtimes!.length,
+                itemCount: worldtimes.length,
                 itemBuilder: (context, index){
                   return Center(
                     child: ListTile(
                       title: Center(
                         child: Text(
-                          worldtimes![index].formatted(),
+                          worldtimes[timezones[index]]!.formatted(),
                           style: const TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.w400
@@ -116,13 +109,13 @@ class _ClockPageState extends State<ClockPage> {
                       subtitle: Column(
                         children: [
                           Text(
-                            '${worldtimes![index].timezone()}, ${worldtimes![index].date()}',
+                            '${worldtimes[timezones[index]]!.timezone()}, ${worldtimes[timezones[index]]!.date()}',
                             style: const TextStyle(
                                 fontSize: 12
                             ),
                           ),
                           Text(
-                            worldtimes![index].offset(),
+                            worldtimes[timezones[index]]!.offset(),
                             style: const TextStyle(
                                 fontSize: 12
                             ),
@@ -131,10 +124,17 @@ class _ClockPageState extends State<ClockPage> {
                       ),
                       trailing: IconButton(
                         onPressed: () async{
-                          box = await Hive.openBox('worldtime');
-                          worldtimes!.removeAt(index);
-                          box!.put('worldtime', worldtimes);
+                          setState(() {
+                            isLoading = true;
+                          });
+                          box = await Hive.openBox(boxName);
+                          worldtimes.remove(timezones[index]);
+                          timezones.removeAt(index);
+                          await box!.put(keyName, timezones);
                           await box!.close();
+                          setState(() {
+                            isLoading = false;
+                          });
                         },
                         icon: const Icon(Icons.delete),
                       ),
@@ -154,10 +154,17 @@ class _ClockPageState extends State<ClockPage> {
         FloatingActionButton(
           heroTag: 'deleteAllButton',
           onPressed: () async{
-            box = await Hive.openBox('worldtime');
-            worldtimes!.clear();
-            box!.put('worldtime', worldtimes);
+            setState(() {
+              isLoading = true;
+            });
+            box = await Hive.openBox(boxName);
+            worldtimes.clear();
+            timezones.clear();
+            await box!.clear();
             await box!.close();
+            setState(() {
+              isLoading = false;
+            });
           },
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(100)
@@ -169,12 +176,22 @@ class _ClockPageState extends State<ClockPage> {
             onPressed: () async{
               dynamic result = await Navigator.pushNamed(context, '/add_timezone');
               if(result != null){
-                box = await Hive.openBox('worldtime');
-                WorldTime instance =  WorldTime(url: result['url']);
-                instance.getTime();
-                worldtimes!.add(instance);
-                box!.put('worldtime', worldtimes);
+                setState(() {
+                  isLoading = true;
+                });
+                box = await Hive.openBox(boxName);
+                String url = result['url'];
+                WorldTime instance =  WorldTime(url: url);
+                await instance.getTime();
+                worldtimes[url] = instance;
+                if (!timezones.contains(url)){
+                  timezones.add(url);
+                }
+                await box!.put(keyName, timezones);
                 await box!.close();
+                setState(() {
+                  isLoading = false;
+                });
               }
             },
             shape: RoundedRectangleBorder(
