@@ -18,33 +18,48 @@ class _ClockPageState extends State<ClockPage> {
   String keyName = 'timezones';
   Timer? t;
   Clock clock = Clock(now: DateTime.now());
-  bool isLoading = true;
+  bool isLoading = false;
+  bool error = false;
 
-  List<String> timezones = [];
   Map<String, WorldTime> worldtimes = {};
 
-  void initClock() async {
-    box = await Hive.openBox(boxName);
-    timezones = List<String>.from(await box!.get(keyName, defaultValue: []));
-    await box!.close();
-
-    if(timezones.isNotEmpty) {
-      for (var timezone in timezones) {
-        WorldTime instance = WorldTime(url: timezone);
-        await instance.getTime();
-        worldtimes[timezone] = instance;
-      }
-    }
-
+  void loadingWrap(void Function() func){
+    setState(() {
+      isLoading = true;
+    });
+    func();
     setState(() {
       isLoading = false;
     });
   }
 
+  void boxClose() async{
+    await box!.close();
+  }
+
   @override
   void initState() {
     super.initState();
-    initClock();
+    loadingWrap(() async {
+      box = await Hive.openBox(boxName);
+      List<String> timezones = List<String>.from(await box!.get(keyName, defaultValue: []));
+
+      if(timezones.isNotEmpty) {
+        for (var timezone in timezones) {
+          WorldTime instance = WorldTime(url: timezone);
+          await instance.getTime().catchError((error, stackTrace) {
+            this.error = true;
+          });
+          if(!error) {
+            instance.difference(clock.now);
+            worldtimes[timezone] = instance;
+          }
+          else{
+            error = false;
+          }
+        }
+      }
+    });
 
     t = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
@@ -56,6 +71,12 @@ class _ClockPageState extends State<ClockPage> {
         }
       });
     });
+  }
+
+  @override
+  void dispose() {
+    boxClose();
+    super.dispose();
   }
 
   @override
@@ -97,43 +118,41 @@ class _ClockPageState extends State<ClockPage> {
                 itemBuilder: (context, index){
                   return Center(
                     child: ListTile(
-                      title: Center(
-                        child: Text(
-                          worldtimes[timezones[index]]!.formatted(),
-                          style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w400
-                          ),
+                      leading: (worldtimes.values.elementAt(index).dayTime!) ?
+                        const Icon(Icons.sunny) :
+                        const Icon(Icons.mode_night),
+                      title: Text(
+                        worldtimes.values.elementAt(index).formatted(),
+                        style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w400
                         ),
+                        textAlign: TextAlign.center,
                       ),
                       subtitle: Column(
                         children: [
                           Text(
-                            '${worldtimes[timezones[index]]!.timezone()}, ${worldtimes[timezones[index]]!.date()}',
+                            '${worldtimes.values.elementAt(index).timezone()}, ${worldtimes.values.elementAt(index).date()}',
                             style: const TextStyle(
                                 fontSize: 12
                             ),
+                            textAlign: TextAlign.center,
                           ),
                           Text(
-                            worldtimes[timezones[index]]!.offset(),
+                            worldtimes.values.elementAt(index).timeDifference.toString(),
                             style: const TextStyle(
                                 fontSize: 12
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
                       trailing: IconButton(
-                        onPressed: () async{
-                          setState(() {
-                            isLoading = true;
-                          });
-                          box = await Hive.openBox(boxName);
-                          worldtimes.remove(timezones[index]);
-                          timezones.removeAt(index);
-                          await box!.put(keyName, timezones);
-                          await box!.close();
-                          setState(() {
-                            isLoading = false;
+                        onPressed: () {
+                          loadingWrap(() async {
+                            String key = worldtimes.keys.elementAt(index);
+                            worldtimes.remove(key);
+                            await box!.put(keyName, List<String>.from(worldtimes.keys));
                           });
                         },
                         icon: const Icon(Icons.delete),
@@ -153,17 +172,10 @@ class _ClockPageState extends State<ClockPage> {
         children: [
         FloatingActionButton(
           heroTag: 'deleteAllButton',
-          onPressed: () async{
-            setState(() {
-              isLoading = true;
-            });
-            box = await Hive.openBox(boxName);
-            worldtimes.clear();
-            timezones.clear();
-            await box!.clear();
-            await box!.close();
-            setState(() {
-              isLoading = false;
+          onPressed: (){
+            loadingWrap(() async {
+              worldtimes.clear();
+              await box!.clear();
             });
           },
           shape: RoundedRectangleBorder(
@@ -176,21 +188,20 @@ class _ClockPageState extends State<ClockPage> {
             onPressed: () async{
               dynamic result = await Navigator.pushNamed(context, '/add_timezone');
               if(result != null){
-                setState(() {
-                  isLoading = true;
-                });
-                box = await Hive.openBox(boxName);
-                String url = result['url'];
-                WorldTime instance =  WorldTime(url: url);
-                await instance.getTime();
-                worldtimes[url] = instance;
-                if (!timezones.contains(url)){
-                  timezones.add(url);
-                }
-                await box!.put(keyName, timezones);
-                await box!.close();
-                setState(() {
-                  isLoading = false;
+                loadingWrap(() async {
+                  String url = result['url'];
+                  WorldTime instance =  WorldTime(url: url);
+                  await instance.getTime().catchError((error, stackTrace) {
+                    this.error = true;
+                  });
+                  if(!error){
+                    instance.difference(clock.now);
+                    worldtimes[url] = instance;
+                    await box!.put(keyName, List<String>.from(worldtimes.keys));
+                  }
+                  else{
+                    error = false;
+                  }
                 });
               }
             },

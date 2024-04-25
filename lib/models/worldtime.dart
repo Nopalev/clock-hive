@@ -6,9 +6,11 @@ class WorldTime {
   final String? url;
 
   DateTime? time;
+  String? timeDifference;
   String? offsetSign;
   int? offsetHours;
   int? offsetMinutes;
+  bool? dayTime;
 
   WorldTime({
     required this.url
@@ -30,9 +32,10 @@ class WorldTime {
       else if(offsetSign == '-'){
         time = time!.subtract(Duration(hours: offsetHours!.toInt(), minutes: offsetMinutes!.toInt()));
       }
+      isDay();
 
     }catch(e){
-      rethrow;
+      return Future.error(e);
     }
   }
 
@@ -44,6 +47,7 @@ class WorldTime {
     else if(offsetSign == '-'){
       time = time!.subtract(Duration(hours: offsetHours!.toInt(), minutes: offsetMinutes!.toInt()));
     }
+    isDay();
   }
 
   String formatted(){
@@ -75,7 +79,52 @@ class WorldTime {
     return url.toString();
   }
 
-  String offset(){
-    return 'UTC $offsetSign${offsetHours.toString().padLeft(2, '0')}:${offsetMinutes.toString().padLeft(2, '0')}';
+  void difference(DateTime now){
+    int minutesDiff = (time!.hour - now.hour)*60 + (time!.minute - now.minute);
+    Duration difference = Duration(minutes: minutesDiff);
+    String output = 'Failed to compute difference';
+
+    if(difference.inMinutes == 0){
+      output = 'Same as local time';
+    }
+    else if(difference.inMinutes < 0){
+      int hours = difference.inHours.abs();
+      int minutes = difference.inMinutes.abs()%60;
+      if(hours == 1) {
+        output = '1 hour ';
+      }
+      else if(hours != 0){
+        output = '$hours hours ';
+      }
+      if (minutes != 0){
+        output += 'and $minutes minutes ';
+      }
+      if(hours == 0){
+        output = '$minutes minutes ';
+      }
+      output += 'late from local time';
+    }
+    else{
+      int hours = difference.inHours.abs();
+      int minutes = difference.inMinutes.abs()%60;
+      if(hours == 1) {
+        output = '1 hour ';
+      }
+      else if(hours != 0){
+        output = '$hours hours ';
+      }
+      if (minutes != 0){
+        output += 'and $minutes minutes ';
+      }
+      if(hours == 0){
+        output = '$minutes minutes ';
+      }
+      output += 'ahead of local time';
+    }
+    timeDifference = output;
+  }
+
+  void isDay(){
+    dayTime = (time!.hour >= 6 && time!.hour <= 17) ? true : false;
   }
 }

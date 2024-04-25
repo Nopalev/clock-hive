@@ -9,6 +9,6 @@ Future<List<String>> getTimezones() async {
     return data;
   }
   catch(e){
-    rethrow;
+    return Future.error(e);
   }
 }
