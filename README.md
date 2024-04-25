@@ -87,7 +87,7 @@ class Clock {
 }
 ```
 
-In order for the clock to keeps running, a `Timer` class is needed to renew the clock in each several miliseconds. Personally I am comfortable with 100 miliseconds as intervals. And as you could see, the `Timer` class is used to update each `WorldTime` class.
+In order for the clock to keeps running, a `Timer` class is needed to renew the clock in each several miliseconds. Personally I am comfortable with 100 miliseconds as intervals. The `Timer` class is used to update each `WorldTime` class.
 
 ```dart
 t = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -159,7 +159,7 @@ class WorldTime {
 }
 ```
 
-After instantiation, calling the `getTime()` method is required in order for the clock to appears. In this block of code, you could see error catching that will be explained in another section.
+After instantiation, calling the `getTime()` method is required in order for the clock to appears. In this block of code, there is an error catching that will be explained in another section.
 
 ```dart
 if(timezones.isNotEmpty) {
