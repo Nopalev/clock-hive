@@ -19,7 +19,7 @@ A personal Flutter project. This project is a clock application that also stores
 
 ## Background
 
-I got an idea about this project from [Worldtime App](https://github.com/iamshaunjp/flutter-beginners-tutorial/tree/lesson-35/world_time_app) made by Shaun from [NetNinja](https://www.youtube.com/TheNetNinja) and decide to made an improvement. Another reason why this project came to fruition is because I have never worked with non-relational database services and thought this kind of project is a good example of storing non-relational data. At the time of writing this, I just learn Flutter for about a months or two and thought this project might help me learn Flutter better. Lastly I am not a native English speaker so please excuse my grammatical errors.
+I got an idea about this project from [Worldtime App](https://github.com/iamshaunjp/flutter-beginners-tutorial/tree/lesson-35/world_time_app) made by Shaun from [NetNinja](https://www.youtube.com/TheNetNinja) and decide to made an improvement. Another reason why this project came to fruition is because I have never worked with non-relational database services and thought this kind of project is a good example of storing non-relational data. At the time of writing this, I just learn Flutter for about a month or two and thought this project might help me learn Flutter better. Lastly I am not a native English speaker so please excuse my grammatical errors.
 
 ## Third Parties and APIs
 
@@ -87,7 +87,7 @@ class Clock {
 }
 ```
 
-In order for the clock to keeps running, a `Timer` class is needed to renew the clock in each several miliseconds. Personally I am comfortable with 100 miliseconds as intervals. The `Timer` class is used to update each `WorldTime` class.
+In order for the clock to keeps running, a `Timer` class is needed to renew the clock in each several milliseconds. Personally I am comfortable with 100 milliseconds as intervals. The `Timer` class is used to update each `WorldTime` class.
 
 ```dart
 t = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -427,7 +427,7 @@ box = await Hive.openBox(boxName);
 List<String> timezones = List<String>.from(await box!.get(keyName, defaultValue: []));
 ```
 
-Everytime a `WorldTime` is instantiated or removed, the box containing instantiated timezones would be updated.
+Every time a `WorldTime` is instantiated or removed, the box containing instantiated timezones would be updated.
 
 ```dart
 IconButton(
@@ -458,7 +458,7 @@ void dispose() {
 
 ## Loading Wrap
 
-Since a lot of methods used were asynchronous, it is a good idea to show a loading page during the use of asynchronous method. The idea is to srap any part of the code that are asynchronous with `setState()` method that update any properties related to loading.
+Since a lot of methods used were asynchronous, it is a good idea to show a loading page during the use of asynchronous method. The idea is to wrap any part of the code that are asynchronous with `setState()` method that update any properties related to loading.
 
 ```dart
 void loadingWrap(void Function() func){
@@ -520,7 +520,7 @@ if(timezones!.isEmpty && mounted){
 In this example, is an error is caught during an API hit to acquire available timezones, user would redirected back to home page. Another use of error handling in this project is during method `getTime()` in `WorldTime` class. If the API hit is failed, the instance would be discarded instead.
 
 Note 1:
-> I do not know if there are better way to cacth errors other than this one.
+> I do not know if there are better way to catch errors other than this one.
 
 Note 2:
 > Yes there are better ways to handling errors rather than only discarding instances or redirecting back. I am just prioritizing writing this wiki instead.
