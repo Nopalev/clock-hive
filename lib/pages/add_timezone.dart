@@ -21,7 +21,7 @@ class _AddTimezoneState extends State<AddTimezone> {
       return List<String>.from([]);
     });
     if(timezones!.isEmpty && mounted){
-      Navigator.pop(context);
+      Navigator.pop(context, 'error');
     }
     timezonesShowed = timezones;
 

@@ -20,6 +20,7 @@ class _ClockPageState extends State<ClockPage> {
   Clock clock = Clock(now: DateTime.now());
   bool isLoading = false;
   bool error = false;
+  String errorMessage = '';
 
   Map<String, WorldTime> worldtimes = {};
 
@@ -49,13 +50,21 @@ class _ClockPageState extends State<ClockPage> {
           WorldTime instance = WorldTime(url: timezone);
           await instance.getTime().catchError((error, stackTrace) {
             this.error = true;
+            if(errorMessage.isEmpty){
+              errorMessage = 'Failed to fetch $timezone timezone information';
+            }
+            else{
+              errorMessage = 'Failed to fetch several timezone information';
+            }
           });
           if(!error) {
             instance.difference(clock.now);
             worldtimes[timezone] = instance;
           }
           else{
-            error = false;
+            if(mounted) {
+              showErrorDialog(context);
+            }
           }
         }
       }
@@ -77,6 +86,46 @@ class _ClockPageState extends State<ClockPage> {
   void dispose() {
     boxClose();
     super.dispose();
+  }
+
+  void showErrorDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // disables popup to close if tapped outside popup (need a button to close)
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'An Error Has Occured',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 36
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            errorMessage,
+            style: const TextStyle(
+                fontSize: 24
+            ),
+            textAlign: TextAlign.center,
+          ),
+          //buttons?
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(
+                Icons.close
+              ),
+              onPressed: () { Navigator.of(context).pop(); },
+              color: Colors.purple,//closes popup
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.center,
+        );
+      }
+    );
+    setState(() {
+      error = false;
+    });
   }
 
   @override
@@ -187,11 +236,12 @@ class _ClockPageState extends State<ClockPage> {
             heroTag: 'addButton',
             onPressed: () async{
               dynamic result = await Navigator.pushNamed(context, '/add_timezone');
-              if(result != null){
+              if(result != null && result != 'error'){
                 loadingWrap(() async {
                   String url = result['url'];
                   WorldTime instance =  WorldTime(url: url);
                   await instance.getTime().catchError((error, stackTrace) {
+                    errorMessage = 'Failed to fetch $url timezone information';
                     this.error = true;
                   });
                   if(!error){
@@ -200,9 +250,18 @@ class _ClockPageState extends State<ClockPage> {
                     await box!.put(keyName, List<String>.from(worldtimes.keys));
                   }
                   else{
-                    error = false;
+                    if(context.mounted) {
+                      showErrorDialog(context);
+                    }
                   }
                 });
+              }
+              else if (result == 'error'){
+                error = true;
+                errorMessage = 'Failed to fetch timezones';
+                if(context.mounted) {
+                  showErrorDialog(context);
+                }
               }
             },
             shape: RoundedRectangleBorder(
