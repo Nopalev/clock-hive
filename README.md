@@ -592,7 +592,6 @@ However, please note that if an error is being caught by another class, please u
 
 I have a plan to add several features such as:
 
-- better error handling
 - alarm
 - stopwatch
 - timer
