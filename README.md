@@ -332,7 +332,7 @@ void difference(DateTime now){
 }
 ```
 
-In order for `timeDifference` properties to be used, method `difference()` must be called after the call of method `getTime()`.
+In order for `timeDifference` property to be used, method `difference()` must be called after the call of method `getTime()`.
 
 ### Get New Timezone
 
@@ -520,17 +520,73 @@ timezones = await getTimezones().catchError((error, stackTrace) {
   return List<String>.from([]);
 });
 if(timezones!.isEmpty && mounted){
-  Navigator.pop(context);
+  Navigator.pop(context, 'error');
 }
 ```
 
 In this example, if an error is caught during an API hit to acquire available timezones, user would redirected back to home page. Another use of error handling in this project is during method `getTime()` in `WorldTime` class. If the API hit is failed, the instance would be discarded instead.
 
-Note 1:
-> I do not know if there are better way to catch errors other than this one.
+If an error has been caught, an instance of `AlertDialog` could be utilized to inform user if there is an error that has been occurred while still allows for the page behind to build and run at the same time.
 
-Note 2:
-> Yes there are better ways to handling errors rather than only discarding instances or redirecting back. I am just prioritizing writing this wiki instead.
+```dart
+void showErrorDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false, // disables popup to close if tapped outside popup (need a button to close)
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text(
+          'An Error Has Occurred',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 36
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          errorMessage,
+          style: const TextStyle(
+              fontSize: 24
+          ),
+          textAlign: TextAlign.center,
+        ),
+        //buttons?
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(
+              Icons.close
+            ),
+            onPressed: () { Navigator.of(context).pop(); },
+            color: Colors.purple,//closes popup
+          ),
+        ],
+        actionsAlignment: MainAxisAlignment.center,
+      );
+    }
+  );
+  setState(() {
+    error = false;
+  });
+}
+```
+
+In `showErrorDialog()` method, an instance of `AlertDialog` will be built upon method call. And since the method is used to show an information about an occurred error, property error in the home page will set back to `false`. This is one example of how the method is utilized.
+
+```dart
+else if (result == 'error'){
+  error = true;
+  errorMessage = 'Failed to fetch timezones';
+  if(context.mounted) {
+    showErrorDialog(context);
+  }
+}
+```
+
+However, please note that if an error is being caught by another class, please use any way other than checking if result from a `Navigator` method is `null` or not since pressing back button will send null to the previous page.
+
+![Error_Dialog](https://github.com/Nopalev/clock-hive/assets/86661387/b768aa6c-913b-4e1f-9ee9-4aeaeb63813f)
+
+> I do not know if there are better way to catch errors other than this one.
 
 ## Improvement Idea
 

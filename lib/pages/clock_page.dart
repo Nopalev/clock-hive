@@ -95,7 +95,7 @@ class _ClockPageState extends State<ClockPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
-            'An Error Has Occured',
+            'An Error Has Occurred',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 36
