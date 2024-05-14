@@ -1,39 +1,60 @@
 import 'dart:convert';
+import 'package:hive/hive.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
+part 'worldtime.g.dart';
+
+@HiveType(typeId: 0)
 class WorldTime {
+  @HiveField(0)
   final String? url;
 
   DateTime? time;
   String? timeDifference;
+
+  @HiveField(1)
   String? offsetSign;
+
+  @HiveField(2)
   int? offsetHours;
+
+  @HiveField(3)
   int? offsetMinutes;
   bool? dayTime;
 
   WorldTime({
-    required this.url
+    required this.url,
+    this.offsetSign,
+    this.offsetHours,
+    this.offsetMinutes
   });
 
-  Future<void> getTime() async{
+  Future<void> init() async {
+    if(offsetSign == null){
+      await _getTime().catchError((error){
+        return Future.error(error);
+      });
+    }
 
+    time = DateTime.now().toUtc();
+
+    if(offsetSign == '+'){
+      time = time!.add(Duration(hours: offsetHours!.toInt(), minutes: offsetMinutes!.toInt()));
+    }
+    else if(offsetSign == '-'){
+      time = time!.subtract(Duration(hours: offsetHours!.toInt(), minutes: offsetMinutes!.toInt()));
+    }
+    isDay();
+  }
+
+  Future<void> _getTime() async{
     try{
       Response response = await get(Uri.parse('https://worldtimeapi.org/api/timezone/$url'));
       Map data = jsonDecode(response.body);
       offsetSign = data['utc_offset'].substring(0, 1);
       offsetHours = int.parse(data['utc_offset'].substring(1, 3));
       offsetMinutes = int.parse(data['utc_offset'].substring(4, 6));
-
-      time = DateTime.now().toUtc();
-      if(offsetSign == '+'){
-        time = time!.add(Duration(hours: offsetHours!.toInt(), minutes: offsetMinutes!.toInt()));
-      }
-      else if(offsetSign == '-'){
-        time = time!.subtract(Duration(hours: offsetHours!.toInt(), minutes: offsetMinutes!.toInt()));
-      }
-      isDay();
-
     }catch(e){
       return Future.error(e);
     }

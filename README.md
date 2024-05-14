@@ -2,6 +2,8 @@
 
 A personal Flutter project. This project is a clock application that also stores some clocks at different timezones.
 
+> This version of wiki is not up to date with the current project.
+
 ## Table of Contents
 
 - [Background](#background)

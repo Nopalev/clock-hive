@@ -1,6 +1,6 @@
+import 'package:clock_hive/database/worldtime_database.dart';
 import 'package:clock_hive/models/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'dart:async';
 import 'package:clock_hive/models/worldtime.dart';
 
@@ -13,9 +13,7 @@ class ClockPage extends StatefulWidget {
 }
 
 class _ClockPageState extends State<ClockPage> {
-  Box? box;
-  String boxName = 'worldtime';
-  String keyName = 'timezones';
+  WorldTimeDatabase worldTimeDatabase = WorldTimeDatabase();
   Timer? t;
   Clock clock = Clock(now: DateTime.now());
   bool isLoading = false;
@@ -34,35 +32,32 @@ class _ClockPageState extends State<ClockPage> {
     });
   }
 
-  void boxClose() async{
-    await box!.close();
+  void boxClose() async {
+    await worldTimeDatabase.close();
   }
 
   @override
   void initState() {
     super.initState();
     loadingWrap(() async {
-      box = await Hive.openBox(boxName);
-      List<String> timezones = List<String>.from(await box!.get(keyName, defaultValue: []));
+      await worldTimeDatabase.open();
+      worldtimes = await worldTimeDatabase.getAll();
 
-      if(timezones.isNotEmpty) {
-        for (var timezone in timezones) {
-          WorldTime instance = WorldTime(url: timezone);
-          await instance.getTime().catchError((error, stackTrace) {
+      if(worldtimes.isNotEmpty){
+        for (WorldTime worldtime in worldtimes.values) {
+          await worldtime.init().catchError((error, stackTrace) {
             this.error = true;
-            if(errorMessage.isEmpty){
-              errorMessage = 'Failed to fetch $timezone timezone information';
-            }
-            else{
+            if (errorMessage.isEmpty) {
+              errorMessage =
+                  'Failed to fetch ${worldtime.url} timezone information';
+            } else {
               errorMessage = 'Failed to fetch several timezone information';
             }
           });
-          if(!error) {
-            instance.difference(clock.now);
-            worldtimes[timezone] = instance;
-          }
-          else{
-            if(mounted) {
+          if (!error) {
+            worldtime.difference(clock.now);
+          } else {
+            if (mounted) {
               showErrorDialog(context);
             }
           }
@@ -201,7 +196,7 @@ class _ClockPageState extends State<ClockPage> {
                           loadingWrap(() async {
                             String key = worldtimes.keys.elementAt(index);
                             worldtimes.remove(key);
-                            await box!.put(keyName, List<String>.from(worldtimes.keys));
+                            await worldTimeDatabase.store(worldtimes.values.toList());
                           });
                         },
                         icon: const Icon(Icons.delete),
@@ -224,7 +219,7 @@ class _ClockPageState extends State<ClockPage> {
           onPressed: (){
             loadingWrap(() async {
               worldtimes.clear();
-              await box!.clear();
+              await worldTimeDatabase.clear();
             });
           },
           shape: RoundedRectangleBorder(
@@ -240,14 +235,14 @@ class _ClockPageState extends State<ClockPage> {
                 loadingWrap(() async {
                   String url = result['url'];
                   WorldTime instance =  WorldTime(url: url);
-                  await instance.getTime().catchError((error, stackTrace) {
+                  await instance.init().catchError((error, stackTrace) {
                     errorMessage = 'Failed to fetch $url timezone information';
                     this.error = true;
                   });
                   if(!error){
                     instance.difference(clock.now);
                     worldtimes[url] = instance;
-                    await box!.put(keyName, List<String>.from(worldtimes.keys));
+                    await worldTimeDatabase.store(worldtimes.values.toList());
                   }
                   else{
                     if(context.mounted) {
