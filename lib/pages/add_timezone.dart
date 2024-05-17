@@ -1,6 +1,7 @@
 // ignore_for_file: unused_import
 
-import 'package:clock_hive/services/get_timezones.dart';
+import 'package:clock_hive/methods/app_bar.dart';
+import 'package:clock_hive/methods/get_timezones.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:clock_hive/models/worldtime.dart';
@@ -58,15 +59,7 @@ class _AddTimezoneState extends State<AddTimezone> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Add Timezone',
-          style: TextStyle(
-              fontWeight: FontWeight.bold
-          ),
-        ),
-          centerTitle: true,
-      ),
+      appBar: appBar('Add Timezone'),
       body: Center(
         child: (isLoading) ?
         const CircularProgressIndicator() :

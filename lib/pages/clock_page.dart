@@ -1,5 +1,8 @@
 import 'package:clock_hive/database/worldtime_database.dart';
 import 'package:clock_hive/models/clock.dart';
+import 'package:clock_hive/methods/app_bar.dart';
+import 'package:clock_hive/methods/error_dialog.dart';
+import 'package:clock_hive/methods/navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:clock_hive/models/worldtime.dart';
@@ -66,58 +69,28 @@ class _ClockPageState extends State<ClockPage> {
     });
 
     t = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      setState(() {
-        clock.renew();
-        if(worldtimes.isNotEmpty) {
-          for (var worldtime in worldtimes.values) {
-            worldtime.renew();
+      if(mounted){
+        setState(() {
+          clock.renew();
+          if (worldtimes.isNotEmpty) {
+            for (var worldtime in worldtimes.values) {
+              worldtime.renew();
+            }
           }
-        }
-      });
+        });
+      }
     });
   }
 
   @override
   void dispose() {
+    t!.cancel();
     boxClose();
     super.dispose();
   }
 
   void showErrorDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false, // disables popup to close if tapped outside popup (need a button to close)
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'An Error Has Occurred',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 36
-            ),
-            textAlign: TextAlign.center,
-          ),
-          content: Text(
-            errorMessage,
-            style: const TextStyle(
-                fontSize: 24
-            ),
-            textAlign: TextAlign.center,
-          ),
-          //buttons?
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(
-                Icons.close
-              ),
-              onPressed: () { Navigator.of(context).pop(); },
-              color: Colors.purple,//closes popup
-            ),
-          ],
-          actionsAlignment: MainAxisAlignment.center,
-        );
-      }
-    );
+    errorDialog(context, errorMessage);
     setState(() {
       error = false;
     });
@@ -126,15 +99,7 @@ class _ClockPageState extends State<ClockPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Clock',
-          style: TextStyle(
-            fontWeight: FontWeight.bold
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: appBar('Clock'),
       body: Center(
         child: (isLoading) ?
         const CircularProgressIndicator() :
@@ -266,6 +231,7 @@ class _ClockPageState extends State<ClockPage> {
           ),
         ],
       ),
+      bottomNavigationBar: navigationBar(context, 1)
     );
   }
 }
