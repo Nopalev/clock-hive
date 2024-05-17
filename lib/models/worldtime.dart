@@ -101,7 +101,7 @@ class WorldTime {
   }
 
   void difference(DateTime now){
-    int minutesDiff = (time!.hour - now.hour)*60 + (time!.minute - now.minute);
+    int minutesDiff = (time!.day - now.day)*60*24 + (time!.hour - now.hour)*60 + (time!.minute - now.minute);
     Duration difference = Duration(minutes: minutesDiff);
     String output = 'Failed to compute difference';
 

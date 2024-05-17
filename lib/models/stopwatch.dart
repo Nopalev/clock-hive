@@ -1,6 +1,6 @@
 class StopWatch extends Stopwatch{
   int starterMilliseconds;
-  List<String> timestamps;
+  List<int> timestamps;
 
   StopWatch({
     this.starterMilliseconds = 0,
@@ -26,16 +26,20 @@ class StopWatch extends Stopwatch{
     starterMilliseconds = timeInMilliseconds;
   }
 
-  String formatted(){
-    String milliseconds = (elapsedMillis % 1000).toString().padLeft(3, "0"); // this one for the miliseconds
-    String seconds = ((elapsedMillis ~/ 1000) % 60).toString().padLeft(2, "0"); // this is for the second
-    String minutes = ((elapsedMillis ~/ 1000) ~/ 60).toString().padLeft(2, "0"); // this is for the minute
+  String timeStampAsString(int index){
+    return formatted(timestamps[index]);
+  }
+
+  String formatted(int milli){
+    String milliseconds = (milli % 1000).toString().padLeft(3, "0");
+    String seconds = ((milli ~/ 1000) % 60).toString().padLeft(2, "0");
+    String minutes = ((milli ~/ 1000) ~/ 60).toString().padLeft(2, "0");
 
     return "$minutes:$seconds:$milliseconds";
   }
 
   void record(){
-    timestamps.add(formatted());
+    timestamps.insert(0, elapsedMilliseconds);
   }
 
   void removeTimestamp(int index){

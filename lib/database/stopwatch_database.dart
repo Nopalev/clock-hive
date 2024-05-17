@@ -19,7 +19,7 @@ class StopWatchDatabase{
   Future<StopWatch> get() async {
     int starter = await box!.get(starterKey, defaultValue: 0) as int;
     List<dynamic> rawTimestamps = await box!.get(timestampsKey, defaultValue: []);
-    List<String> timestamps = rawTimestamps.cast<String>();
+    List<int> timestamps = rawTimestamps.cast<int>();
     StopWatch stopWatch = StopWatch(starterMilliseconds: starter, timestamps: timestamps);
     return stopWatch;
   }

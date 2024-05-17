@@ -17,7 +17,7 @@ class StopwatchPage extends StatefulWidget {
 class _StopwatchPageState extends State<StopwatchPage> {
   StopWatchDatabase stopWatchDatabase = StopWatchDatabase();
   StopWatch stopWatch = StopWatch();
-  List<String> timestamps = [];
+  List<int> timestamps = [];
   Timer? t;
   bool isLoading = true;
   bool error = false;
@@ -76,6 +76,15 @@ class _StopwatchPageState extends State<StopwatchPage> {
     });
   }
 
+  String timeDifference(int timeInMilli, int timeFrom){
+    int elapsedMillis = timeFrom - timeInMilli;
+    String milliseconds = (elapsedMillis % 1000).toString().padLeft(3, "0");
+    String seconds = ((elapsedMillis ~/ 1000) % 60).toString().padLeft(2, "0");
+    String minutes = ((elapsedMillis ~/ 1000) ~/ 60).toString().padLeft(2, "0");
+
+    return "+$minutes:$seconds:$milliseconds";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,7 +96,7 @@ class _StopwatchPageState extends State<StopwatchPage> {
           children: <Widget>[
             const SizedBox(height: 20),
             Text(
-              stopWatch.formatted(),
+              stopWatch.formatted(stopWatch.elapsedMillis),
               style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 48
@@ -101,29 +110,28 @@ class _StopwatchPageState extends State<StopwatchPage> {
                   return Center(
                     child: ListTile(
                       leading: Text(
-                        (index+1).toString(),
+                        stopWatch.formatted(timestamps[index]),
                         style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold
+                            fontSize: 12,
                         ),
-                        textAlign: TextAlign.center,
+                        textAlign: TextAlign.left,
                       ),
                       title: Text(
-                        timestamps[index],
+                        (timestamps.length - index == 1) ?
+                        timeDifference(0, timestamps[index]):
+                        timeDifference(timestamps[index+1], timestamps[index]),
                         style: const TextStyle(
-                            fontSize: 36,
+                            fontSize: 24,
                             fontWeight: FontWeight.w400
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      trailing: IconButton(
-                        onPressed: () {
-                          loadingWrap(() async {
-                            stopWatch.removeTimestamp(index);
-                            await stopWatchDatabase.store(stopWatch);
-                          });
-                        },
-                        icon: const Icon(Icons.delete),
+                      trailing: Text(
+                        (timestamps.length - index).toString(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.right,
                       ),
                     ),
                   );
@@ -172,13 +180,12 @@ class _StopwatchPageState extends State<StopwatchPage> {
             icon: const Icon(Icons.clear),
           ),
           CustomFAB(
-            heroTag: 'reset',
+            heroTag: 'start',
             onPressed: () async {
-              stopWatch.reset();
-              timestamps.clear();
+              stopWatch.start();
               await stopWatchDatabase.store(stopWatch);
             },
-            icon: const Icon(Icons.clear),
+            icon: const Icon(Icons.play_arrow),
           ),
         ],
       ),

@@ -25,7 +25,6 @@ class ErrorDialog extends StatelessWidget {
         ),
         textAlign: TextAlign.center,
       ),
-      //buttons?
       actions: <Widget>[
         IconButton(
           icon: const Icon(
