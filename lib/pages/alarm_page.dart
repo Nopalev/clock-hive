@@ -1,5 +1,5 @@
-import 'package:clock_hive/methods/app_bar.dart';
-import 'package:clock_hive/methods/navigation_bar.dart';
+import 'package:clock_hive/components/app_bar.dart';
+import 'package:clock_hive/components/navigation_bar.dart';
 import 'package:flutter/material.dart';
 
 class AlarmPage extends StatefulWidget {
@@ -13,8 +13,8 @@ class _AlarmPageState extends State<AlarmPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('Alarm'),
-      bottomNavigationBar: navigationBar(context, 0),
+      appBar: const CustomAppBar(title: 'Alarm'),
+      bottomNavigationBar: CustomNavBar(selectedIndex: 0),
     );
   }
 }

@@ -1,7 +1,8 @@
+import 'package:clock_hive/components/floating_action_button.dart';
 import 'package:clock_hive/database/stopwatch_database.dart';
-import 'package:clock_hive/methods/app_bar.dart';
-import 'package:clock_hive/methods/error_dialog.dart';
-import 'package:clock_hive/methods/navigation_bar.dart';
+import 'package:clock_hive/components/app_bar.dart';
+import 'package:clock_hive/components/error_dialog.dart';
+import 'package:clock_hive/components/navigation_bar.dart';
 import 'package:clock_hive/models/stopwatch.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -63,7 +64,13 @@ class _StopwatchPageState extends State<StopwatchPage> {
   }
 
   void showErrorDialog(BuildContext context) {
-    errorDialog(context, errorMessage);
+    showDialog(
+        context: context,
+        barrierDismissible: false, // disables popup to close if tapped outside popup (need a button to close)
+        builder: (BuildContext context) {
+          return ErrorDialog(errorMessage: errorMessage);
+        }
+    );
     setState(() {
       error = false;
     });
@@ -72,7 +79,7 @@ class _StopwatchPageState extends State<StopwatchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('Stopwatch'),
+      appBar: const CustomAppBar(title: 'Stopwatch'),
       body: (isLoading) ?
       const CircularProgressIndicator() :
       Center(
@@ -134,59 +141,48 @@ class _StopwatchPageState extends State<StopwatchPage> {
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          FloatingActionButton(
+          CustomFAB(
             heroTag: 'record',
             onPressed: () async {
               stopWatch.record();
               await stopWatchDatabase.store(stopWatch);
             },
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(100)
-            ),
-            child: const Icon(Icons.flag),
+            icon: const Icon(Icons.flag)
           ),
-          FloatingActionButton(
+          CustomFAB(
             heroTag: 'stop',
             onPressed: () async {
               stopWatch.stop();
               await stopWatchDatabase.store(stopWatch);
             },
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(100)
-            ),
-            child: const Icon(Icons.stop),
+            icon: const Icon(Icons.stop),
           ),
         ],
       ) :
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          FloatingActionButton(
+          CustomFAB(
             heroTag: 'reset',
             onPressed: () async {
               stopWatch.reset();
               timestamps.clear();
               await stopWatchDatabase.store(stopWatch);
             },
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(100)
-            ),
-            child: const Icon(Icons.clear),
+            icon: const Icon(Icons.clear),
           ),
-          FloatingActionButton(
-            heroTag: 'start',
+          CustomFAB(
+            heroTag: 'reset',
             onPressed: () async {
-              stopWatch.start();
+              stopWatch.reset();
+              timestamps.clear();
               await stopWatchDatabase.store(stopWatch);
             },
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(100)
-            ),
-            child: const Icon(Icons.play_arrow),
+            icon: const Icon(Icons.clear),
           ),
         ],
       ),
-      bottomNavigationBar: navigationBar(context, 2),
+      bottomNavigationBar: CustomNavBar(selectedIndex: 2),
     );
   }
 }

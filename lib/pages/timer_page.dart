@@ -1,5 +1,5 @@
-import 'package:clock_hive/methods/app_bar.dart';
-import 'package:clock_hive/methods/navigation_bar.dart';
+import 'package:clock_hive/components/app_bar.dart';
+import 'package:clock_hive/components/navigation_bar.dart';
 import 'package:flutter/material.dart';
 
 class TimerPage extends StatefulWidget {
@@ -13,8 +13,8 @@ class _TimerPageState extends State<TimerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('Timer'),
-      bottomNavigationBar: navigationBar(context, 3),
+      appBar: const CustomAppBar(title: 'Timer'),
+      bottomNavigationBar: CustomNavBar(selectedIndex: 3),
     );
   }
 }

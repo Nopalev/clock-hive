@@ -1,10 +1,7 @@
-// ignore_for_file: unused_import
-
-import 'package:clock_hive/methods/app_bar.dart';
-import 'package:clock_hive/methods/get_timezones.dart';
+import 'dart:convert';
+import 'package:http/http.dart';
+import 'package:clock_hive/components/app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:clock_hive/models/worldtime.dart';
 
 class AddTimezone extends StatefulWidget {
   const AddTimezone({super.key});
@@ -56,10 +53,21 @@ class _AddTimezoneState extends State<AddTimezone> {
     });
   }
 
+  Future<List<String>> getTimezones() async {
+    try{
+      Response response = await get(Uri.parse('https://worldtimeapi.org/api/timezone'));
+      List<String> data = List<String>.from(jsonDecode(response.body));
+      return data;
+    }
+    catch(e){
+      return Future.error(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('Add Timezone'),
+      appBar: const CustomAppBar(title: 'Add Timezone'),
       body: Center(
         child: (isLoading) ?
         const CircularProgressIndicator() :

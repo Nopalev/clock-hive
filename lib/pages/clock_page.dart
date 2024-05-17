@@ -1,8 +1,9 @@
+import 'package:clock_hive/components/floating_action_button.dart';
 import 'package:clock_hive/database/worldtime_database.dart';
 import 'package:clock_hive/models/clock.dart';
-import 'package:clock_hive/methods/app_bar.dart';
-import 'package:clock_hive/methods/error_dialog.dart';
-import 'package:clock_hive/methods/navigation_bar.dart';
+import 'package:clock_hive/components/app_bar.dart';
+import 'package:clock_hive/components/error_dialog.dart';
+import 'package:clock_hive/components/navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:clock_hive/models/worldtime.dart';
@@ -90,7 +91,13 @@ class _ClockPageState extends State<ClockPage> {
   }
 
   void showErrorDialog(BuildContext context) {
-    errorDialog(context, errorMessage);
+    showDialog(
+      context: context,
+      barrierDismissible: false, // disables popup to close if tapped outside popup (need a button to close)
+      builder: (BuildContext context) {
+        return ErrorDialog(errorMessage: errorMessage);
+      }
+    );
     setState(() {
       error = false;
     });
@@ -99,7 +106,7 @@ class _ClockPageState extends State<ClockPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('Clock'),
+      appBar: const CustomAppBar(title: 'Clock'),
       body: Center(
         child: (isLoading) ?
         const CircularProgressIndicator() :
@@ -179,20 +186,17 @@ class _ClockPageState extends State<ClockPage> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-        FloatingActionButton(
-          heroTag: 'deleteAllButton',
-          onPressed: (){
-            loadingWrap(() async {
-              worldtimes.clear();
-              await worldTimeDatabase.clear();
-            });
-          },
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(100)
+          CustomFAB(
+            heroTag: 'deleteAllButton',
+            onPressed: (){
+              loadingWrap(() async {
+                worldtimes.clear();
+                await worldTimeDatabase.clear();
+              });
+            },
+            icon: const Icon(Icons.clear)
           ),
-          child: const Icon(Icons.clear),
-        ),
-          FloatingActionButton(
+          CustomFAB(
             heroTag: 'addButton',
             onPressed: () async{
               dynamic result = await Navigator.pushNamed(context, '/add_timezone');
@@ -224,14 +228,11 @@ class _ClockPageState extends State<ClockPage> {
                 }
               }
             },
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(100)
-            ),
-            child: const Icon(Icons.add),
+            icon: const Icon(Icons.add)
           ),
         ],
       ),
-      bottomNavigationBar: navigationBar(context, 1)
+      bottomNavigationBar: CustomNavBar(selectedIndex: 1)
     );
   }
 }
